@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "groover"
+version = "0.1.0"
+description = ""
+authors = ["arystambek-dimash <arystambekdimash005@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.115.0"
+alembic = "^1.13.2"
+pydantic-settings = "^2.5.2"
+pyjwt = "^2.9.0"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.35"}
+dishka = "^1.3.0"
+uvicorn = "^0.30.6"
+psycopg = "^3.2.2"
+psycopg2-binary = "^2.9.9"
+asyncpg = "^0.29.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
