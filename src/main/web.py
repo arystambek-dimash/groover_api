@@ -2,16 +2,19 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from starlette.staticfiles import StaticFiles
 
 from src.adapters.database.session import get_async_sessionmaker, get_engine
-from src.main.config import settings
+from src.main.config import settings, MEDIA_DIR
 from src.main.ioc import IoC
-from src.presentation.api.endpoints import include_routers, include_exception_handlers
+from src.presentation.api.endpoints import include_routers
+from src.presentation.api.exception_handlers import include_exception_handlers
+from src.presentation.api.middlewares import include_middlewares
 from src.presentation.interactor_factory import InteractorFactory
 
 app = FastAPI(
     docs_url='/api/docs',
-    redoc_url='/api/redoc',
+    redoc_url='/api/redoc'
 )
 
 origins = [
@@ -25,7 +28,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.mount("/media_files", StaticFiles(directory=MEDIA_DIR), name="media")
+include_middlewares(app)
 include_exception_handlers(app)
 
 

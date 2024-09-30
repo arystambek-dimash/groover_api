@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel
 
@@ -13,8 +12,8 @@ class UserSchema(BaseModel):
 
 class UpdateUserSchema(BaseModel):
     username: Optional[str] = None
-    profile_image: Optional[str] = None
     password: Optional[str] = None
+    avatar_id: Optional[int] = None
 
 
 class StaffSchema(BaseModel):
@@ -27,8 +26,9 @@ class ResponseUserSchema(BaseModel):
     id: int
     email: str
     username: str
-    profile_image: Optional[str] = None
+    avatar_url: Union[str, None]
     is_staff: bool = False
+    is_manager: bool = False
     role: Optional[str] = None
 
 

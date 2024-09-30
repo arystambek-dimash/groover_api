@@ -14,8 +14,11 @@ class UserOrm(Base):
     username: Mapped[str] = mapped_column(
         sa.String, unique=True, index=True
     )
-    profile_image: Mapped[str] = mapped_column(sa.String, nullable=True)
     password: Mapped[str] = mapped_column(sa.String, nullable=False)
-
+    avatar_id: Mapped[int] = mapped_column(
+        sa.ForeignKey('avatars.id', ondelete='SET NULL'), nullable=True
+    )
     client = relationship('ClientOrm', lazy='selectin', back_populates="user", uselist=False)
     staff = relationship('StaffOrm', lazy='joined', back_populates="user", uselist=False)
+
+    avatar = relationship('AvatarOrm', back_populates="users", uselist=False)

@@ -1,13 +1,24 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends
+from fastapi import status
+from fastapi import HTTPException
+from fastapi.security import HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.adapters.auth.jwt_service import JWTService
-from src.adapters.database.provider import get_user_repository
-from src.domain.exceptions.jwt import InvalidCredentialsError
-from src.domain.entities.user import DBUser
 from src.main.config import settings
+from src.domain.entities.user import DBUser
+from src.application.user.jwt import JWTService
+from src.adapters.database.provider import get_user_repository
 from src.presentation.api.dependencies.db import get_db_session
+
+from src.domain.exceptions.jwt import (
+    JWTError,
+    JWTExpiredError,
+    JWTMissingError,
+    JWTSignatureError,
+    JWTDecodeError
+)
 
 security = HTTPBearer()
 
@@ -16,10 +27,7 @@ async def get_token(credentials: HTTPAuthorizationCredentials = Depends(security
     if credentials:
         return credentials.credentials
     else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-        )
+        raise JWTMissingError("Missing authentication token")
 
 
 async def get_current_user(
@@ -32,19 +40,28 @@ async def get_current_user(
         payload = jwt_service.decode(token)
         user_id = payload.sub
         if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-            )
-        user = await user_repository.get_by_id(user_id)
+            raise JWTError("Invalid token payload")
+        user = await user_repository.get(user_id)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found",
-            )
+            raise JWTError("User not found")
         return user
-    except InvalidCredentialsError:
+    except JWTExpiredError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
+            detail="Token has expired",
+        )
+    except JWTSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token signature",
+        )
+    except JWTDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not decode token",
+        )
+    except JWTError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
         )

@@ -11,26 +11,13 @@ class CreateUserDTO:
 
 
 @dataclass(frozen=True)
-class UserDTO:
-    email: str
-    password: str
-    username: str
-    profile_image: Optional[str]
-    is_active: bool
-
-
-@dataclass(frozen=True, kw_only=True)
-class DBUserDTO(UserDTO):
-    id: int
-
-
-@dataclass(frozen=True)
 class ResponseUserDTO:
     id: int
     email: str
     username: str
-    profile_image: Optional[str]
+    avatar_url: str
     is_staff: bool = False
+    is_manager: bool = False
     role: Optional[str] = None
 
 
@@ -51,7 +38,7 @@ class TokenDTO:
 class UpdateUserDTO:
     password: Optional[str] = None
     username: Optional[str] = None
-    profile_image: Optional[str] = None
+    avatar_id: Optional[int] = None
 
 
 @dataclass(frozen=True)

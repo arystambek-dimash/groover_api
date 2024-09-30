@@ -58,6 +58,7 @@ async def sign_up_staff(
                 role=data.role,
             )
         )
+        print(response)
         return response
 
 
@@ -115,7 +116,7 @@ async def update_profile(
         update_dto = UpdateUserDTO(
             password=data.password,
             username=data.username,
-            profile_image=data.profile_image,
+            avatar_id=data.avatar_id
         )
         response = await interactor(current_user.id, update_dto)
         return response

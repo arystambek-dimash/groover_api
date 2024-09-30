@@ -18,6 +18,8 @@ uvicorn = "^0.30.6"
 psycopg = "^3.2.2"
 psycopg2-binary = "^2.9.9"
 asyncpg = "^0.29.0"
+aiofiles = "^24.1.0"
+python-multipart = "^0.0.12"
 
 
 [build-system]

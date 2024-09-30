@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.domain.entities import  DBWorkout
 
 
 @dataclass
@@ -8,7 +11,11 @@ class Style:
     image_url: str
 
 
-@dataclass
-class DBStyle:
+@dataclass(kw_only=True)
+class DBStyle(Style):
     id: int
-    workouts: List['Workout']
+
+
+@dataclass(kw_only=True)
+class DBStyleWorkout(DBStyle):
+    workouts: List['DBWorkout']

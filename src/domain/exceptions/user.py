@@ -1,29 +1,26 @@
-from src.domain.exceptions.base import DomainError
-
-
-class UserDataError(DomainError):
+class UserDataError(Exception):
     pass
 
 
-class InvalidEmailError(DomainError):
+class InvalidEmailError(Exception):
     pass
 
 
-class IsNotAdminError(DomainError):
+class IsNotAdminError(Exception):
     pass
 
 
-class InvalidPasswordError(DomainError):
+class InvalidPasswordError(Exception):
     pass
 
 
-class UserIsNotExistsError(DomainError):
+class UserIsNotExistsError(Exception):
     pass
 
 
-class IsNotAuthorizedError(DomainError):
+class IsNotAuthorizedError(Exception):
     pass
 
 
-class UserAlreadyExistsError(DomainError):
+class UserAlreadyExistsError(Exception):
     pass

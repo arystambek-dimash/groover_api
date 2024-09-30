@@ -1,13 +1,21 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.domain.entities import DBWorkout
 
 
-@dataclass(frozen=True)
+@dataclass
 class Tag:
     name: str
 
 
-@dataclass(frozen=True)
+@dataclass(kw_only=True)
 class DBTag(Tag):
     id: int
-    workouts: List['Workout']
+    usages: int
+
+
+@dataclass(kw_only=True)
+class DBTagWorkout(DBTag):
+    workouts: List['DBWorkout']

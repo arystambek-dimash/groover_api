@@ -3,10 +3,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from asyncpg import InvalidPasswordError
 from passlib.context import CryptContext
 
-from src.domain.common.value_objects.base import ValueObject
+from src.domain.exceptions.user import InvalidPasswordError
+from src.domain.value_objects.base import ValueObject
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

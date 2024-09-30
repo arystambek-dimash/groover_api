@@ -1,5 +1,4 @@
 from fastapi import Request, responses
-from fastapi.exceptions import RequestValidationError
 
 from src.domain.exceptions.user import (
     UserDataError,
@@ -12,9 +11,9 @@ from src.domain.exceptions.user import (
 
 
 async def user_data_exception_handler(
-        _request: Request, exc: UserDataError,
+        _request: Request, _exc: UserDataError,
 ) -> responses.JSONResponse:
-    return responses.JSONResponse(status_code=422, content={"detail": exc.message})
+    return responses.JSONResponse(status_code=422, content={"detail": str(_exc)})
 
 
 async def invalid_email_exception_handler(
@@ -46,24 +45,6 @@ async def user_already_exists_exception_handler(
 ) -> responses.JSONResponse:
     return responses.JSONResponse(
         status_code=409, content={"detail": "Пользователь уже существует"},
-    )
-
-
-async def value_error_exception_handler(
-        _request: Request, _exc: ValueError
-) -> responses.JSONResponse:
-    return responses.JSONResponse(
-        status_code=409,
-        content={"detail": str(_exc)},
-    )
-
-
-async def unprocessable_entity_exception_handler(
-        _request: Request, _exc: RequestValidationError
-) -> responses.JSONResponse:
-    return responses.JSONResponse(
-        status_code=422,
-        content={"detail": "The provided data is invalid. Please check your input."},
     )
 
 
