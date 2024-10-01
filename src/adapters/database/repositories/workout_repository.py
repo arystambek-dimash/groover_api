@@ -83,6 +83,17 @@ class WorkoutRepositoryImpl:
         await self._session.execute(stmt)
         await self._session.flush()
 
+    async def update_workout_views(self, workout_id: int) -> DBWorkout:
+        stmt = select(WorkoutOrm).where(WorkoutOrm.id == workout_id).options(
+            selectinload(WorkoutOrm.tags),
+        )
+        result = await self._session.execute(stmt)
+        workout_orm = result.scalar_one()
+
+        workout_orm.views_count += 1
+        await self._session.flush()
+        return self._map_to_db_workout(workout_orm, False)
+
     @staticmethod
     def _map_to_db_workout(workout_orm: WorkoutOrm, with_style: bool) -> Union[DBWorkout, DBWorkoutStyle]:
         base_kwargs = {

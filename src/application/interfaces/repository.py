@@ -74,6 +74,9 @@ class WorkoutRepository(Repository[DBWorkout], Protocol):
     async def get_by_name(self, name: str) -> DBWorkout | None:
         ...
 
+    async def update_workout_views(self, workout_id) -> DBWorkout | None:
+        ...
+
 
 class AvatarRepository(Repository[DBAvatar], Protocol):
     ...

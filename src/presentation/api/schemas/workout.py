@@ -25,6 +25,11 @@ class Workout(BaseModel):
         from_attributes = True
 
 
+class WorkoutViewResponse(BaseModel):
+    id: int
+    views_count: int
+
+
 class WorkoutStyle(Workout):
     style: Style
 

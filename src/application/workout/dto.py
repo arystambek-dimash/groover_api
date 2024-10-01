@@ -41,6 +41,12 @@ class WorkoutResponseStyleDTO:
 
 
 @dataclass
+class ViewsUpdateResponseDTO:
+    id: int
+    views_count: int
+
+
+@dataclass
 class WorkoutCreateDTO:
     name: str
     calories: int

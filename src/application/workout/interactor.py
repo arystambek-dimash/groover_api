@@ -11,7 +11,7 @@ from src.application.workout.dto import (
     WorkoutCreateDTO,
     WorkoutUpdateDTO,
     WorkoutResponseStyleDTO,
-    WorkoutResponseDTO,
+    WorkoutResponseDTO, ViewsUpdateResponseDTO,
 )
 from src.domain.entities.workout import Workout
 from src.domain.services.tag import TagService
@@ -155,6 +155,18 @@ class WorkoutInteractor:
                 await self._uow.rollback()
                 if image_url:
                     await self._upload_service.delete_file(image_url.url)
+                raise e
+
+    async def update_workout_views(self, workout_id: int) -> ViewsUpdateResponseDTO:
+        async with self._uow:
+            try:
+                existing_workout = await self._workout_repository.get(workout_id)
+                if not existing_workout:
+                    raise NotFound(f"Workout with id {workout_id} not found.")
+                updated_view_workout = await self._workout_repository.update_workout_views(workout_id)
+                return ViewsUpdateResponseDTO(id=updated_view_workout.id, views_count=updated_view_workout.views_count)
+            except Exception as e:
+                await self._uow.rollback()
                 raise e
 
     async def delete_workout(self, workout_id: int) -> None:

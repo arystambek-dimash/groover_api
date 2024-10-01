@@ -2,7 +2,7 @@ from dataclasses import asdict
 from typing import List, Optional, Union
 
 from starlette.responses import JSONResponse, Response
-from fastapi import APIRouter, Depends, status, UploadFile, File
+from fastapi import APIRouter, Depends, status, UploadFile, File, Form
 
 from src.domain.entities.upload import CreateUpload
 from src.presentation.api.dependencies.permissions.user import IsAdminUser, IsAuthenticatedUser
@@ -15,7 +15,7 @@ from src.application.workout.dto import (
 from src.presentation.api.schemas.workout import (
     WorkoutCreate,
     WorkoutUpdate,
-    Workout, WorkoutStyle
+    Workout, WorkoutStyle, WorkoutViewResponse
 )
 
 router = APIRouter(prefix='/workouts', tags=['workouts'])
@@ -219,6 +219,17 @@ async def update_workout(
             style_id=int(workout.style_id)
         ))
     return updated_workout
+
+
+@router.put('/workout/update-views',
+            response_model=WorkoutViewResponse,
+            dependencies=[Depends(IsAuthenticatedUser())])
+async def update_workout_views(workout_id: int = Form(), ioc: InteractorFactory = Depends()):
+    async with ioc.pick_workout_interactor(lambda i: i.update_workout_views) as interactor:
+        workout = await interactor(
+            workout_id
+        )
+    return workout
 
 
 @router.delete('/{workout_id}/delete',
