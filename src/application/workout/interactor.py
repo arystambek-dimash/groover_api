@@ -94,7 +94,7 @@ class WorkoutInteractor:
             await self._uow.commit()
             return True
 
-    async def delete_tag_from_workout(self, workout_id: int, tag_id: int) -> WorkoutResponseDTO:
+    async def delete_tag_from_workout(self, workout_id: int, tag_id: int) -> bool:
         async with self._uow:
             existing_workout = await self._workout_repository.get(workout_id)
             if not existing_workout:
@@ -125,14 +125,12 @@ class WorkoutInteractor:
                 existing_workout = await self._workout_repository.get(workout_id)
                 if not existing_workout:
                     raise NotFound(f"Workout with id {workout_id} not found.")
+
                 if dto.name:
                     existing_by_name = await self._workout_repository.get_by_name(dto.name)
                     if existing_by_name and existing_by_name.id != workout_id:
                         raise AlreadyExists(f"Workout with name '{dto.name}' already exists.")
-                if dto.style_id:
-                    existing_style = await self._style_repository.get(dto.style_id)
-                    if not existing_style:
-                        raise NotFound(f"Style with id {dto.style_id} not found.")
+
                 if dto.thumbnail_image:
                     image_url = await self._upload_service.upload_file(
                         file=dto.thumbnail_image.file,
@@ -144,7 +142,6 @@ class WorkoutInteractor:
                         await self._upload_service.delete_file(existing_workout.thumbnail_image)
                 else:
                     dto.thumbnail_image = None
-
                 updated_entity = self._workout_service.update_workout(existing_workout, dto)
                 updated_workout = await self._workout_repository.update(updated_entity)
                 await self._uow.commit()
@@ -185,7 +182,7 @@ class WorkoutInteractor:
             await self._workout_repository.delete(workout_id)
             await self._uow.commit()
 
-    async def _handle_tags_for_workout(self, workout_id: int, tags: List[str]):
+    async def _handle_tags_for_workout(self, workout_id: int, tags: List[str]) -> None:
         for tag_name in tags:
             existing_tag = await self._tag_repository.get_by_name(tag_name)
             if not existing_tag:

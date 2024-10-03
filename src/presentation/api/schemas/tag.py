@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
 
-from src.domain.entities.workout import DBWorkout
-
 
 class TagCreate(BaseModel):
     name: str
@@ -18,8 +16,16 @@ class Tag(BaseModel):
     usages: int | None
 
 
+class TagWorkout(BaseModel):
+    id: int
+    name: str
+    thumbnail_image: str
+    author_name: str
+    views_count: int
+
+
 class TagWorkouts(Tag):
-    workouts: List[DBWorkout]
+    workouts: List[TagWorkout]
 
 
 class TagList(BaseModel):

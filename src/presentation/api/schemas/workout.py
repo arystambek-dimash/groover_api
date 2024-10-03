@@ -2,10 +2,13 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Union
 
 from src.presentation.api.schemas.base import AsForm
-from src.presentation.api.schemas.style import Style
-from src.presentation.api.schemas.tag import Tag
 
 from src.adapters.database.models.workout import LevelsEnum
+
+
+class WorkoutTag(BaseModel):
+    id: int
+    name: str
 
 
 class Workout(BaseModel):
@@ -17,12 +20,11 @@ class Workout(BaseModel):
     description: str
     dance_video: str
     thumbnail_image: str
-    author_name: str
-    views_count: int
-    tags: List[Tag]
+    tags: List[WorkoutTag]
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class WorkoutViewResponse(BaseModel):
@@ -30,8 +32,17 @@ class WorkoutViewResponse(BaseModel):
     views_count: int
 
 
-class WorkoutStyle(Workout):
-    style: Style
+class WorkoutStyle(BaseModel):
+    id: int
+    name: str
+    image_url: str
+
+
+class WorkoutWithStyle(Workout):
+    style: WorkoutStyle
+
+    class Config:
+        from_attributes = True
 
 
 class WorkoutCreate(AsForm):
@@ -51,17 +62,18 @@ class WorkoutCreate(AsForm):
 
 class WorkoutUpdate(AsForm):
     name: Optional[str] = None
-    calories: Optional[int] = None
-    duration: Optional[int] = None
-    level: Optional[LevelsEnum] = None
+    calories: Union[Optional[int], Optional[str]] = None
+    duration: Union[Optional[int], Optional[str]] = None
+    level: Union[Optional[LevelsEnum], Optional[str]] = None
     description: Optional[str] = None
     dance_video: Optional[str] = None
     author_name: Optional[str] = None
-    style_id: Optional[Union[int, str]] = None
 
-    @validator('calories', 'duration', 'style_id', pre=True, always=True)
+    @validator('calories', 'duration', pre=True, always=True)
     def empty_str_to_none(cls, v):
-        return None if v == '' else v
+        if isinstance(v, str) and v.strip() == '':
+            return None
+        return v
 
     class Config:
         from_attributes = True
@@ -71,4 +83,4 @@ class WorkoutList(BaseModel):
     workouts: List[Workout]
 
     class Config:
-        from_attribute = True
+        from_attributes = True

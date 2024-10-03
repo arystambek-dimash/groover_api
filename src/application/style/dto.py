@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 from src.domain.entities.upload import CreateUpload
 
@@ -19,11 +19,10 @@ class ResponseStyleDTO:
 
 @dataclass
 class ResponseStyleWorkoutsDTO:
-    from src.application.workout.dto import WorkoutResponseDTO
     id: int
     name: str
     image_url: str
-    workouts: list[WorkoutResponseDTO]
+    workouts: List['WorkoutResponseDTO']
 
 
 @dataclass

@@ -1,8 +1,6 @@
-from typing import Optional, List, Mapping
-
+from typing import Optional, List, Dict
 from pydantic import BaseModel
 
-from src.domain.entities.workout import Workout
 from src.presentation.api.schemas.base import AsForm
 
 
@@ -20,5 +18,16 @@ class Style(BaseModel):
     image_url: str
 
 
+class StyleWorkout(BaseModel):
+    id: int
+    name: str
+    thumbnail_image: str
+    author_name: str
+    views_count: int
+
+
 class StyleWithWorkouts(Style):
-    workouts: List[Workout]
+    workouts: List[StyleWorkout]
+
+    class Config:
+        populate_by_name = True

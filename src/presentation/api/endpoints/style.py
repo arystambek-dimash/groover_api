@@ -166,6 +166,7 @@ async def get_style(style_id: int, ioc: InteractorFactory = Depends()):
 async def get_style_detail(style_id: int, ioc: InteractorFactory = Depends()):
     async with ioc.pick_style_interactor(lambda i: i.get_style) as interactor:
         response = await interactor(style_id, True)
+    print(response)
     return response
 
 

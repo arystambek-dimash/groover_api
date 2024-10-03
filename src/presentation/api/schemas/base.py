@@ -1,8 +1,8 @@
 import inspect
-from typing import Type, Any
+from typing import Type
 
 from fastapi import Form
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, ConfigDict
 from pydantic.v1.fields import Undefined
 
 
@@ -35,3 +35,7 @@ class AsForm(BaseModel):
         as_form_func.__signature__ = inspect.signature(as_form_func).replace(parameters=new_parameters)
 
         return as_form_func
+
+    class Config:
+        populate_by_name = True
+        coerce_numbers_to_str = True

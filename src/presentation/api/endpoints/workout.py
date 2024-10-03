@@ -1,6 +1,4 @@
-from dataclasses import asdict
-from typing import List, Optional, Union
-
+from typing import List, Optional
 from starlette.responses import JSONResponse, Response
 from fastapi import APIRouter, Depends, status, UploadFile, File, Form
 
@@ -15,7 +13,7 @@ from src.application.workout.dto import (
 from src.presentation.api.schemas.workout import (
     WorkoutCreate,
     WorkoutUpdate,
-    Workout, WorkoutStyle, WorkoutViewResponse
+    Workout, WorkoutViewResponse
 )
 
 router = APIRouter(prefix='/workouts', tags=['workouts'])
@@ -171,7 +169,7 @@ async def get_workout(workout_id: int, ioc: InteractorFactory = Depends()):
 
 
 @router.put('/{workout_id}/update',
-            response_model=WorkoutStyle,
+            response_model=Workout,
             status_code=status.HTTP_200_OK,
             dependencies=[Depends(IsAdminUser())],
             responses={
@@ -205,18 +203,16 @@ async def update_workout(
         )
     else:
         create_upload = None
-
     async with ioc.pick_workout_interactor(lambda i: i.update_workout) as interactor:
         updated_workout = await interactor(workout_id, WorkoutUpdateDTO(
             name=workout.name,
-            calories=int(workout.calories),
-            duration=int(workout.duration),
+            calories=int(workout.calories) if workout.calories is not None else None,
+            duration=int(workout.duration) if workout.duration is not None else None,
             level=workout.level,
             description=workout.description,
             dance_video=workout.dance_video,
             thumbnail_image=create_upload,
-            author_name=workout.author_name,
-            style_id=int(workout.style_id)
+            author_name=workout.author_name
         ))
     return updated_workout
 

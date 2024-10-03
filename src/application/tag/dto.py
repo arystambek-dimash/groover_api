@@ -15,9 +15,14 @@ class ResponseTagDTO:
 
 
 @dataclass
+class ResponseWorkoutTagDTO:
+    id: int
+    name: str
+
+
+@dataclass
 class ResponseTagWorkoutDTO(ResponseTagDTO):
-    from src.application.workout.dto import WorkoutResponseDTO
-    workouts: List[WorkoutResponseDTO]
+    workouts: List['WorkoutResponseDTO']
 
 
 @dataclass

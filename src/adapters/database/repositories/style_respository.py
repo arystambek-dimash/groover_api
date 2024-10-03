@@ -100,7 +100,7 @@ class StyleRepositoryImpl:
                                 views_count=workout_orm.views_count,
                                 style_id=workout_orm.style_id,
                                 tags=[
-                                    DBTag(id=tag.id, name=tag.name)
+                                    DBTag(id=tag.id, name=tag.name, usages=tag.usages)
                                     for tag in workout_orm.tags],
                                 ) for workout_orm in style.workouts]
         )

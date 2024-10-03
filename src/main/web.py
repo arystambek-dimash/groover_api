@@ -4,13 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from starlette.staticfiles import StaticFiles
 
-from src.adapters.database.session import get_async_sessionmaker, get_engine
 from src.main.config import settings, MEDIA_DIR
 from src.main.ioc import IoC
+
 from src.presentation.api.endpoints import include_routers
-from src.presentation.api.exception_handlers import include_exception_handlers
 from src.presentation.api.middlewares import include_middlewares
 from src.presentation.interactor_factory import InteractorFactory
+from src.presentation.api.exception_handlers import include_exception_handlers
+
+from src.adapters.database.session import get_async_sessionmaker, get_engine
 
 app = FastAPI(
     docs_url='/api/docs',

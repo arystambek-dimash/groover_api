@@ -58,6 +58,7 @@ class WorkoutRepositoryImpl:
 
     async def update(self, workout: DBWorkout) -> DBWorkout:
         workout_data = asdict(workout)
+        workout_data.pop('id', None)
         workout_data.pop('tags', None)
         stmt = (
             update(WorkoutOrm)

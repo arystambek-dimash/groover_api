@@ -1,8 +1,8 @@
-from dataclasses import asdict
 from typing import List, Union
 from src.application.interfaces.uow import UoW
 from src.application.interfaces.repository import StyleRepository
 from src.application.style.dto import CreateStyleDTO, UpdateStyleDTO, ResponseStyleWorkoutsDTO, ResponseStyleDTO
+from src.application.tag.dto import ResponseWorkoutTagDTO
 from src.application.workout.dto import WorkoutResponseDTO
 from src.domain.entities.tag import DBTag
 from src.domain.entities.style import DBStyle, DBStyleWorkout
@@ -35,7 +35,11 @@ class StyleInteractor:
                 style_entity = await self.style_service.create_style(dto.name, image_url.url)
                 db_style: DBStyle = await self.style_repository.add(style_entity)
                 await self.uow.commit()
-                return ResponseStyleDTO(**asdict(db_style))
+                return ResponseStyleDTO(
+                    id=db_style.id,
+                    name=db_style.name,
+                    image_url=db_style.image_url
+                )
             except Exception as e:
                 if image_url is not None:
                     await self._upload_service.delete_file(image_url.url)
@@ -48,14 +52,13 @@ class StyleInteractor:
             style = await self.style_repository.get_with_workouts(style_id)
         else:
             style = await self.style_repository.get(style_id)
-
         if not style:
             raise NotFound(f"Style with id {style_id} not found.")
         return self._map_to_response_entity(style, with_workouts)
 
     async def list_styles(self) -> List[ResponseStyleDTO]:
         styles = await self.style_repository.list()
-        return [ResponseStyleDTO(**asdict(style)) for style in styles]
+        return [ResponseStyleDTO(id=style.id, name=style.name, image_url=style.image_url) for style in styles]
 
     async def update_style(self, style_id: int, dto: UpdateStyleDTO) -> ResponseStyleDTO:
         async with self.uow:
@@ -63,7 +66,6 @@ class StyleInteractor:
             if not db_style:
                 raise NotFound(f"Style with id {style_id} not found.")
 
-            # Check for name conflicts
             if dto.name:
                 existing_style = await self.style_repository.get_by_name(dto.name)
                 if existing_style and existing_style.id != style_id:
@@ -85,7 +87,11 @@ class StyleInteractor:
             )
             await self.style_repository.update(updated_style)
             await self.uow.commit()
-            return ResponseStyleDTO(**asdict(updated_style))
+            return ResponseStyleDTO(
+                id=updated_style.id,
+                name=updated_style.name,
+                image_url=updated_style.image_url
+            )
 
     async def delete_style(self, style_id: int) -> None:
         async with self.uow:
@@ -115,7 +121,7 @@ class StyleInteractor:
                         thumbnail_image=db_workout.thumbnail_image,
                         author_name=db_workout.author_name,
                         views_count=db_workout.views_count,
-                        tags=[DBTag(id=tag.id, name=tag.name) for tag in db_workout.tags]
+                        tags=[ResponseWorkoutTagDTO(id=tag.id, name=tag.name) for tag in db_workout.tags],
                     ) for db_workout in entity.workouts
                 ]
             )

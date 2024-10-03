@@ -77,7 +77,7 @@ async def get_all_tags(ioc: InteractorFactory = Depends()):
             summary='Search tags by name, with option to include workouts')
 async def get_tags_by_name(with_workout: bool, name: str, ioc: InteractorFactory = Depends()):
     async with ioc.pick_tag_interactor(lambda i: i.get_filtered_tags) as interactor:
-        response = await interactor.get_filtered_tags(name=name, with_workout=with_workout)
+        response = await interactor(name=name, with_workout=with_workout)
     return response
 
 
@@ -97,7 +97,7 @@ async def get_tags_by_min_usages(min_usages: int, with_workout: bool = False, io
             summary='Search tags by maximum usages, with option to include workouts')
 async def get_tags_by_max_usages(max_usages: int, with_workout: bool = False, ioc: InteractorFactory = Depends()):
     async with ioc.pick_tag_interactor(lambda i: i.get_filtered_tags) as interactor:
-        response = await interactor.get_filtered_tags(max_usages=max_usages, with_workout=with_workout)
+        response = await interactor(max_usages=max_usages, with_workout=with_workout)
     return response
 
 
