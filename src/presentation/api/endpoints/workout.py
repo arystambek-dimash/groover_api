@@ -13,7 +13,7 @@ from src.application.workout.dto import (
 from src.presentation.api.schemas.workout import (
     WorkoutCreate,
     WorkoutUpdate,
-    Workout, WorkoutViewResponse
+    Workout, WorkoutViewResponse, WorkoutWithStyle
 )
 
 router = APIRouter(prefix='/workouts', tags=['workouts'])
@@ -84,44 +84,9 @@ async def create_workout(workout: WorkoutCreate = Depends(WorkoutCreate.as_form(
 
 @router.get('/list',
             dependencies=[Depends(IsAuthenticatedUser())],
+            response_model=List[WorkoutWithStyle],
             responses={
                 status.HTTP_200_OK: {
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "workouts": [
-                                    {
-                                        "id": 1,
-                                        "name": "Morning Yoga",
-                                        "calories": 200,
-                                        "duration": 60,
-                                        "level": "Beginner",
-                                        "description": "A relaxing morning yoga session.",
-                                        "dance_video": "http://example.com/video",
-                                        "thumbnail_image": "http://example.com/image",
-                                        "author_name": "Jane Doe",
-                                        "views_count": 100,
-                                        "style_id": 1,
-                                        "tags": ["Hip Hop", "Qamazhai"]
-                                    },
-                                    {
-                                        "id": 2,
-                                        "name": "Advanced Cardio",
-                                        "calories": 300,
-                                        "duration": 45,
-                                        "level": "Advanced",
-                                        "description": "High-intensity cardio workout.",
-                                        "dance_video": "http://example.com/video2",
-                                        "thumbnail_image": "http://example.com/image2",
-                                        "author_name": "John Smith",
-                                        "views_count": 150,
-                                        "style_id": 2,
-                                        "tags": ["String", "Hello world"]
-                                    }
-                                ]
-                            }
-                        }
-                    },
                     "description": "List of all workouts"
                 },
                 status.HTTP_404_NOT_FOUND: {
