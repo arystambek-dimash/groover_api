@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional, List
 
+from src.domain.entities.pagination import PaginatedResponseDTO
+
 
 @dataclass
 class CreateTagDTO:
@@ -12,6 +14,12 @@ class ResponseTagDTO:
     id: int
     name: str
     usages: int
+
+
+@dataclass
+class ResponseRecommendationTagDTO:
+    tags: PaginatedResponseDTO[ResponseTagDTO]
+    popular: PaginatedResponseDTO[ResponseTagDTO]
 
 
 @dataclass

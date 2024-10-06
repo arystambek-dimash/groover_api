@@ -1,13 +1,12 @@
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.adapters.database.models import TagOrm
-from src.domain.entities.style import DBStyle
+from src.adapters.database.models import TagOrm, WorkoutOrm
 from src.domain.entities.tag import DBTagWorkout, Tag, DBTag
-from src.domain.entities.workout import DBWorkoutStyle
+from src.domain.entities.workout import DBWorkout
 from src.domain.exceptions.base import NotFound
 
 
@@ -76,34 +75,21 @@ class TagRepositoryImpl:
 
     async def search_by_constraints(
             self,
-            name: Optional[str] = None,
-            min_usages: Optional[int] = None,
-            max_usages: Optional[int] = None,
-            with_workout: Optional[bool] = False
+            name: Optional[str] = None
     ) -> List[DBTag]:
         stmt = select(TagOrm)
         if name:
             stmt = stmt.where(TagOrm.name.ilike(f"%{name}%"))
-        if min_usages is not None:
-            stmt = stmt.where(TagOrm.usages >= min_usages)
-        if max_usages is not None:
-            stmt = stmt.where(TagOrm.usages <= max_usages)
-        if with_workout:
-            stmt = stmt.options(selectinload(TagOrm.workouts))
         result = await self._session.execute(stmt)
         tag_orms = result.scalars().all()
-        if with_workout:
-            return [self._map_to_db_tag_workouts(tag_orm) for tag_orm in tag_orms]
-        else:
-            return [self._map_to_db_tag(tag_orm) for tag_orm in tag_orms]
+        return [self._map_to_db_tag(tag_orm) for tag_orm in tag_orms]
 
     async def get_with_workouts(self, tag_id: int) -> Optional[DBTagWorkout]:
         stmt = (
             select(TagOrm)
             .where(TagOrm.id == tag_id)
             .options(
-                selectinload(TagOrm.workouts).selectinload('style'),
-                selectinload(TagOrm.workouts).selectinload('tags')
+                selectinload(TagOrm.workouts).selectinload(WorkoutOrm.tags)
             )
         )
         result = await self._session.execute(stmt)
@@ -120,6 +106,43 @@ class TagRepositoryImpl:
             return self._map_to_db_tag(tag_orm)
         return None
 
+    async def list_paginated_tags(self, page: int, limit: int) -> Tuple[List[DBTag], int]:
+        total_count_stmt = select(func.count(TagOrm.id))
+        total_result = await self._session.execute(total_count_stmt)
+        total_count = total_result.scalar_one()
+
+        stmt = (
+            select(TagOrm)
+            .offset((page - 1) * limit)
+            .limit(limit)
+        )
+        result = await self._session.execute(stmt)
+        tag_orms = result.scalars().all()
+        tags = [self._map_to_db_tag(tag_orm) for tag_orm in tag_orms]
+
+        return tags, total_count
+
+    async def list_paginated_popular_tags(
+            self,
+            page: int,
+            page_size: int
+    ) -> Tuple[List[DBTag], int]:
+        total_count_stmt = select(func.count(TagOrm.id))
+        total_result = await self._session.execute(total_count_stmt)
+        total_count = total_result.scalar_one()
+
+        stmt = (
+            select(TagOrm)
+            .order_by(TagOrm.usages.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+        result = await self._session.execute(stmt)
+        tag_orms = result.scalars().all()
+        tags = [self._map_to_db_tag(tag_orm) for tag_orm in tag_orms]
+
+        return tags, total_count
+
     @staticmethod
     def _map_to_db_tag(tag: TagOrm) -> DBTag:
         return DBTag(
@@ -135,7 +158,7 @@ class TagRepositoryImpl:
             name=tag.name,
             usages=tag.usages,
             workouts=[
-                DBWorkoutStyle(
+                DBWorkout(
                     id=db_workout.id,
                     name=db_workout.name,
                     calories=db_workout.calories,
@@ -147,13 +170,8 @@ class TagRepositoryImpl:
                     author_name=db_workout.author_name,
                     views_count=db_workout.views_count,
                     style_id=db_workout.style_id,
-                    style=DBStyle(
-                        id=db_workout.style.id,
-                        name=db_workout.style.name,
-                        image_url=db_workout.style.image_url
-                    ) if db_workout.style else None,
                     tags=[
-                        DBTag(id=tag.id, name=tag.name)
+                        DBTag(id=tag.id, name=tag.name, usages=tag.usages)
                         for tag in db_workout.tags
                     ],
                 )

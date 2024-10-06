@@ -1,8 +1,10 @@
 from dataclasses import asdict
-from typing import List, Union, Optional
+from typing import List, Union
 from src.application.interfaces.repository import TagRepository
 from src.application.interfaces.uow import UoW
-from src.application.tag.dto import CreateTagDTO, UpdateTagDTO, ResponseTagDTO, ResponseTagWorkoutDTO
+from src.application.tag.dto import CreateTagDTO, UpdateTagDTO, ResponseTagDTO, ResponseTagWorkoutDTO, \
+    ResponseRecommendationTagDTO
+from src.domain.entities.pagination import PaginatedResponseDTO
 from src.domain.entities.tag import DBTag
 from src.domain.exceptions.base import NotFound, AlreadyExists
 from src.domain.services.tag import TagService
@@ -19,6 +21,22 @@ class TagInteractor:
         self._uow = uow
         self._tag_service = tag_service
 
+    async def get_tag(self, tag_id: int, with_workout: bool = False) -> Union[ResponseTagDTO, ResponseTagWorkoutDTO]:
+        if with_workout:
+            tag = await self._tag_repository.get_with_workouts(tag_id)
+            if not tag:
+                raise NotFound(f"Tag with id {tag_id} not found.")
+            return ResponseTagWorkoutDTO(**asdict(tag))
+        else:
+            tag = await self._tag_repository.get(tag_id)
+            if not tag:
+                raise NotFound(f"Tag with id {tag_id} not found.")
+            return ResponseTagDTO(**asdict(tag))
+
+    async def get_filtered_tags(self, name: str) -> List[ResponseTagDTO]:
+        tags = await self._tag_repository.search_by_constraints(name=name)
+        return [ResponseTagDTO(**asdict(tag)) for tag in tags]
+
     async def create_tag(self, tag_dto: CreateTagDTO) -> ResponseTagDTO:
         async with self._uow:
             existing_tag = await self._tag_repository.get_by_name(tag_dto.name)
@@ -29,30 +47,27 @@ class TagInteractor:
             await self._uow.commit()
             return ResponseTagDTO(**asdict(db_tag))
 
-    async def get_tag(self, tag_id: int, with_workout: bool = False) -> ResponseTagDTO:
-        if with_workout:
-            tag = await self._tag_repository.get_with_workouts(tag_id)
-        else:
-            tag = await self._tag_repository.get(tag_id)
-        if not tag:
-            raise NotFound(f"Tag with id {tag_id} not found.")
-        return ResponseTagDTO(**asdict(tag))
+    async def list_tags(self,
+                        page: int = 1,
+                        limit: int = 10) -> PaginatedResponseDTO:
+        tags, total_count = await self._tag_repository.list_paginated_tags(page, limit)
+        return PaginatedResponseDTO(
+            items=[ResponseTagDTO(**asdict(r)) for r in tags],
+            total_count=total_count,
+            page=page,
+            page_size=limit
+        )
 
-    async def get_filtered_tags(self, name: Optional[str] = None,
-                                min_usages: Optional[int] = None,
-                                max_usages: Optional[int] = None,
-                                with_workout: bool = False) -> Union[
-        List[ResponseTagDTO], List[ResponseTagWorkoutDTO]]:
-        tags = await self._tag_repository.search_by_constraints(max_usages=max_usages, min_usages=min_usages, name=name,
-                                                                with_workout=with_workout)
-        if with_workout:
-            return [ResponseTagWorkoutDTO(**asdict(tag)) for tag in tags]
-        else:
-            return [ResponseTagDTO(**asdict(tag)) for tag in tags]
-
-    async def list_tags(self) -> List[ResponseTagDTO]:
-        res = await self._tag_repository.list()
-        return [ResponseTagDTO(**asdict(r)) for r in res]
+    async def list_popular_tags(self,
+                                page: int = 1,
+                                limit: int = 10) -> PaginatedResponseDTO:
+        popular_tags, total_count = await self._tag_repository.list_paginated_popular_tags(page, limit)
+        return PaginatedResponseDTO(
+            items=[ResponseTagDTO(**asdict(r)) for r in popular_tags],
+            total_count=total_count,
+            page=page,
+            page_size=limit
+        )
 
     async def update_tag(
             self,

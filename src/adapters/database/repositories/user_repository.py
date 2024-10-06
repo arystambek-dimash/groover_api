@@ -40,7 +40,8 @@ class UserRepositoryImpl:
     async def get_by_email(self, email: str) -> Optional[DBUser]:
         query = select(UserORM).where(UserORM.email == email).options(
             selectinload(UserORM.client),
-            selectinload(UserORM.staff)
+            selectinload(UserORM.staff),
+            selectinload(UserORM.avatar)
         )
         result = await self.session.execute(query)
         user_orm = result.scalar_one_or_none()

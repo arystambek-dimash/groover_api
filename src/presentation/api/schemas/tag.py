@@ -28,5 +28,12 @@ class TagWorkouts(Tag):
     workouts: List[TagWorkout]
 
 
+class PaginatedTag(BaseModel):
+    items: List[Tag]
+    total_count: int
+    page: int
+    page_size: int
+
+
 class TagList(BaseModel):
     tags: List[Tag]

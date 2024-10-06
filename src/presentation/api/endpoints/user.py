@@ -58,7 +58,6 @@ async def sign_up_staff(
                 role=data.role,
             )
         )
-        print(response)
         return response
 
 

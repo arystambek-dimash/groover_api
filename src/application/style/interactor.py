@@ -121,6 +121,7 @@ class StyleInteractor:
                         thumbnail_image=db_workout.thumbnail_image,
                         author_name=db_workout.author_name,
                         views_count=db_workout.views_count,
+                        style_id=db_workout.style_id,
                         tags=[ResponseWorkoutTagDTO(id=tag.id, name=tag.name) for tag in db_workout.tags],
                     ) for db_workout in entity.workouts
                 ]

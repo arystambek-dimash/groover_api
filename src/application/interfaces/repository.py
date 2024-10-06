@@ -1,4 +1,4 @@
-from typing import Protocol, TypeVar, List, Optional, Union
+from typing import Protocol, TypeVar, List, Optional, Union, Tuple
 
 from src.domain.entities.avatar import DBAvatar
 from src.domain.entities.staff import DBStaff
@@ -60,10 +60,22 @@ class TagRepository(Repository[Union[DBTag, DBTagWorkout]], Protocol):
 
     async def search_by_constraints(self,
                                     name: Optional[str] = None,
-                                    min_usages: Optional[int] = None,
-                                    max_usages: Optional[int] = None,
                                     with_workout: Optional[bool] = False
                                     ):
+        ...
+
+    async def list_paginated_popular_tags(
+            self,
+            page: int,
+            page_size: int
+    ) -> Tuple[List[DBTag], int]:
+        ...
+
+    async def list_paginated_tags(
+            self,
+            page: int,
+            page_size: int
+    ) -> Tuple[List[DBTag], int]:
         ...
 
 

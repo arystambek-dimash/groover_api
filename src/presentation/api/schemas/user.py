@@ -35,4 +35,4 @@ class ResponseUserSchema(BaseModel):
 class TokenSchema(BaseModel):
     access_token: str
     refresh_token: str
-    role: str = 'CLIENT'
+    role: str

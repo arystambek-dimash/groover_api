@@ -1,11 +1,14 @@
 from typing import List, Union
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from starlette.responses import JSONResponse, Response
+
+from src.application.tag.interactor import TagInteractor
+from src.domain.entities.pagination import PaginatedResponseDTO
 from src.presentation.api.dependencies.permissions.user import IsAdminUser, IsAuthenticatedUser
 from src.presentation.interactor_factory import InteractorFactory
 from src.application.tag.dto import CreateTagDTO, UpdateTagDTO
-from src.presentation.api.schemas.tag import TagCreate, TagUpdate, Tag, TagWorkouts
+from src.presentation.api.schemas.tag import TagCreate, TagUpdate, Tag, TagWorkouts, PaginatedTag
 
 router = APIRouter(prefix='/tags', tags=['tags'])
 
@@ -50,7 +53,7 @@ async def create_tag(tag: TagCreate, ioc: InteractorFactory = Depends()):
 
 
 @router.get('/list',
-            dependencies=[Depends(IsAuthenticatedUser())],
+            dependencies=[Depends(IsAdminUser())],
             response_model=List[Tag],
             responses={
                 status.HTTP_404_NOT_FOUND: {
@@ -64,7 +67,7 @@ async def create_tag(tag: TagCreate, ioc: InteractorFactory = Depends()):
                     "description": "No tags found"
                 }
             },
-            summary='List all tags')
+            summary='List all tags, for admins and managers')
 async def get_all_tags(ioc: InteractorFactory = Depends()):
     async with ioc.pick_tag_interactor(lambda i: i.list_tags) as interactor:
         response = await interactor()
@@ -73,31 +76,11 @@ async def get_all_tags(ioc: InteractorFactory = Depends()):
 
 @router.get('/search/by-name',
             dependencies=[Depends(IsAuthenticatedUser())],
-            response_model=Union[List[TagWorkouts], List[Tag]],
+            response_model=List[Tag],
             summary='Search tags by name, with option to include workouts')
-async def get_tags_by_name(with_workout: bool, name: str, ioc: InteractorFactory = Depends()):
+async def get_tags_by_name(name: str, ioc: InteractorFactory = Depends()):
     async with ioc.pick_tag_interactor(lambda i: i.get_filtered_tags) as interactor:
-        response = await interactor(name=name, with_workout=with_workout)
-    return response
-
-
-@router.get('/search/by-min-usages',
-            dependencies=[Depends(IsAuthenticatedUser())],
-            response_model=Union[List[TagWorkouts], List[Tag]],
-            summary='Search tags by minimum usages, with option to include workouts')
-async def get_tags_by_min_usages(min_usages: int, with_workout: bool = False, ioc: InteractorFactory = Depends()):
-    async with ioc.pick_tag_interactor(lambda i: i.get_filtered_tags) as interactor:
-        response = await interactor(min_usages=min_usages, with_workout=with_workout)
-    return response
-
-
-@router.get('/search/by-max-usages',
-            dependencies=[Depends(IsAuthenticatedUser())],
-            response_model=Union[List[TagWorkouts], List[Tag]],
-            summary='Search tags by maximum usages, with option to include workouts')
-async def get_tags_by_max_usages(max_usages: int, with_workout: bool = False, ioc: InteractorFactory = Depends()):
-    async with ioc.pick_tag_interactor(lambda i: i.get_filtered_tags) as interactor:
-        response = await interactor(max_usages=max_usages, with_workout=with_workout)
+        response = await interactor(name=name)
     return response
 
 
@@ -123,7 +106,61 @@ async def get_tags_by_max_usages(max_usages: int, with_workout: bool = False, io
             summary='Get a tag, only admins or managers')
 async def get_tag(tag_id: int, ioc: InteractorFactory = Depends()):
     async with ioc.pick_tag_interactor(lambda i: i.get_tag) as interactor:
-        response = await interactor(tag_id)
+        response = await interactor(tag_id, False)
+    return response
+
+
+@router.get('/list/paginated',
+            dependencies=[Depends(IsAuthenticatedUser())],
+            response_model=PaginatedTag,
+            summary='List paginated tags')
+async def get_tags_paginated(
+        page: int = Query(1, ge=1),
+        limit: int = Query(10, ge=1),
+        ioc: InteractorFactory = Depends()
+):
+    async with ioc.pick_tag_interactor(lambda i: i.list_tags) as interactor:
+        response = await interactor(page, limit)
+    return response
+
+
+@router.get('/list/popular',
+            dependencies=[Depends(IsAuthenticatedUser())],
+            response_model=PaginatedTag,
+            summary='List popular tags with pagination')
+async def get_popular_tags_paginated(
+        page: int = Query(1, ge=1),
+        limit: int = Query(10, ge=1),
+        ioc: InteractorFactory = Depends()
+):
+    async with ioc.pick_tag_interactor(lambda i: i.list_popular_tags) as interactor:
+        response = await interactor(page, limit)
+    return response
+
+
+@router.get('/{tag_id}/detial',
+            response_model=TagWorkouts,
+            status_code=status.HTTP_200_OK,
+            dependencies=[Depends(IsAdminUser())],
+            responses={
+                status.HTTP_200_OK: {
+                    "description": "Tag retrieved successfully"
+                },
+                status.HTTP_404_NOT_FOUND: {
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "Tag not found"
+                            }
+                        }
+                    },
+                    "description": "Tag not found"
+                }
+            },
+            summary='Get a tag with detail')
+async def get_tag(tag_id: int, ioc: InteractorFactory = Depends()):
+    async with ioc.pick_tag_interactor(lambda i: i.get_tag) as interactor:
+        response = await interactor(tag_id, True)
     return response
 
 
